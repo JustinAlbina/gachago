@@ -101,9 +101,10 @@ nav{position:fixed;top:0;left:0;right:0;z-index:1000;padding:0 2rem;height:64px;
 .cta-btn:hover{transform:translateY(-3px);box-shadow:0 8px 50px rgba(255,110,180,0.45)}
 
 /* ── MAP VIEW ── */
-#view-map{padding:64px 0 0}
-.map-bar{padding:1rem 2rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;
-  border-bottom:0.5px solid var(--border);background:rgba(7,8,15,0.6);backdrop-filter:blur(16px)}
+#view-map{padding:0;overflow:hidden}
+.map-bar{position:absolute;top:64px;left:0;right:0;z-index:10;padding:0.75rem 2rem;
+  display:flex;align-items:center;gap:1rem;flex-wrap:wrap;
+  border-bottom:0.5px solid var(--border);background:rgba(7,8,15,0.85);backdrop-filter:blur(16px)}
 .map-bar h2{font-family:var(--font-d);font-size:1.2rem;font-weight:600;white-space:nowrap}
 .map-search-wrap{display:flex;gap:0.5rem;flex:1;max-width:380px}
 .map-search-wrap input{flex:1;background:var(--bg3);border:0.5px solid var(--border);border-radius:10px;
@@ -113,8 +114,8 @@ nav{position:fixed;top:0;left:0;right:0;z-index:1000;padding:0 2rem;height:64px;
 .map-search-wrap button{background:var(--accent2);border:none;border-radius:10px;padding:0.55rem 1rem;
   color:#000;font-weight:600;cursor:pointer;font-size:0.85rem;transition:background 0.2s}
 .map-search-wrap button:hover{background:#6ee7f7}
-#map-wrap{position:relative;height:calc(100vh - 114px);overflow:hidden;background:#0d1320}
-#map{height:100%;width:100%}
+#map-wrap{position:absolute;top:114px;left:0;right:0;bottom:0;background:#0d1320}
+#map{position:absolute;inset:0}
 /* Prevent infinite world tiling */
 .leaflet-container{background:#0d1320 !important}
 
@@ -633,7 +634,7 @@ function showView(name) {
   document.getElementById('view-'+name).classList.add('active');
   window.scrollTo(0,0);
   document.querySelectorAll('.nav-pill').forEach(b=>b.classList.remove('active-view'));
-  if(name==='map'){document.getElementById('navExplore').classList.add('active-view');if(!window._mapDone)initMap();else setTimeout(()=>map.invalidateSize(),100);}
+  if(name==='map'){document.getElementById('navExplore').classList.add('active-view');setTimeout(()=>{if(!window._mapDone)initMap();else map.invalidateSize();},50);}
   if(name==='profile'){document.getElementById('navProfile').classList.add('active-view');renderProfile()}
 }
 function goHome(){showView('landing');document.querySelectorAll('.nav-pill').forEach(b=>b.classList.remove('active-view'))}
