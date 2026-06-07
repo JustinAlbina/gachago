@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GachaGo — Pull Your Next Adventure</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#07080f;
+  --bg2:#0d1020;
+  --bg3:#131828;
+  --card:#181e30;
+  --border:rgba(255,255,255,0.07);
+  --text:#eef0ff;
+  --muted:#5a6380;
+  --common:#9ca3af;
+  --rare:#60a5fa;
+  --ultra:#c084fc;
+  --legendary:#fbbf24;
+  --accent:#ff6eb4;
+  --accent2:#38d9f5;
+  --green:#2ecc87;
+  --font-d:'Fredoka',sans-serif;
+  --font-b:'DM Sans',sans-serif;
+  --font-m:'DM Mono',monospace;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font-b);overflow-x:hidden;min-height:100vh}
+
+/* ── BACKGROUND ── */
+.bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-gradient{position:absolute;inset:0;background:
+  radial-gradient(ellipse 60% 40% at 20% 20%,rgba(255,110,180,0.07) 0%,transparent 60%),
+  radial-gradient(ellipse 50% 35% at 80% 70%,rgba(56,217,245,0.06) 0%,transparent 60%),
+  radial-gradient(ellipse 40% 50% at 50% 50%,rgba(192,132,252,0.04) 0%,transparent 70%)}
+.grid-overlay{position:absolute;inset:0;
+  background-image:linear-gradient(rgba(255,255,255,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.02) 1px,transparent 1px);
+  background-size:60px 60px}
+.grid-overlay::after{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at center,transparent 30%,var(--bg) 100%)}
+.floating-orbs{position:absolute;inset:0}
+.orb{position:absolute;border-radius:50%;filter:blur(60px);animation:orbFloat var(--d,20s) ease-in-out infinite var(--del,0s)}
+@keyframes orbFloat{0%,100%{transform:translate(0,0)}33%{transform:translate(var(--tx,20px),var(--ty,-30px))}66%{transform:translate(calc(var(--tx,20px)*-0.5),var(--ty,-30px))}}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:1000;padding:0 2rem;height:64px;display:flex;align-items:center;justify-content:space-between;
+  background:rgba(7,8,15,0.75);backdrop-filter:blur(24px);border-bottom:0.5px solid var(--border)}
+.logo{display:flex;align-items:center;gap:0;text-decoration:none;cursor:pointer}
+.logo-gacha{font-family:var(--font-d);font-size:1.6rem;font-weight:700;color:var(--text);letter-spacing:-0.01em}
+.logo-go{font-family:var(--font-d);font-size:1.6rem;font-weight:700;
+  background:linear-gradient(135deg,var(--accent),var(--ultra));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.logo-globe{font-size:1.1rem;margin-left:0.3rem;animation:globeSpin 8s linear infinite;display:inline-block}
+@keyframes globeSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.nav-right{display:flex;align-items:center;gap:0.75rem}
+.nav-pill{background:rgba(255,255,255,0.04);border:0.5px solid var(--border);color:var(--muted);
+  padding:0.4rem 1rem;border-radius:99px;font-family:var(--font-b);font-size:0.82rem;cursor:pointer;
+  transition:all 0.2s;display:flex;align-items:center;gap:0.4rem}
+.nav-pill:hover{border-color:rgba(255,255,255,0.15);color:var(--text)}
+.nav-pill.active-view{border-color:var(--accent);color:var(--accent);background:rgba(255,110,180,0.08)}
+.pulls-badge{background:rgba(255,110,180,0.1);border:0.5px solid rgba(255,110,180,0.3);
+  color:var(--accent);padding:0.4rem 0.9rem;border-radius:99px;font-size:0.78rem;font-family:var(--font-m)}
+.key-btn{background:linear-gradient(135deg,var(--accent),var(--ultra));border:none;border-radius:99px;
+  padding:0.4rem 1.1rem;color:#fff;font-family:var(--font-d);font-size:0.95rem;font-weight:600;cursor:pointer;transition:all 0.2s}
+.key-btn:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(255,110,180,0.4)}
+
+/* ── VIEWS ── */
+.view{display:none;min-height:100vh;padding-top:64px;position:relative;z-index:1}
+.view.active{display:block}
+
+/* ── LANDING ── */
+#view-landing{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:64px 2rem 2rem;min-height:100vh}
+.landing-tag{font-family:var(--font-m);font-size:0.72rem;letter-spacing:0.18em;color:var(--accent2);
+  text-transform:uppercase;margin-bottom:2rem;
+  display:flex;align-items:center;gap:0.75rem}
+.landing-tag::before,.landing-tag::after{content:'';flex:0 0 40px;height:1px;
+  background:linear-gradient(90deg,transparent,var(--accent2))}
+.landing-tag::after{background:linear-gradient(90deg,var(--accent2),transparent)}
+.h1{font-family:var(--font-d);font-size:clamp(3.2rem,8vw,6.5rem);font-weight:700;
+  line-height:1;margin-bottom:1.25rem;letter-spacing:-0.02em}
+.h1 em{font-style:normal;
+  background:linear-gradient(135deg,var(--accent) 0%,var(--ultra) 50%,var(--accent2) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.landing-sub{font-size:1.05rem;color:var(--muted);max-width:480px;line-height:1.75;margin-bottom:2.5rem}
+.rarity-row{display:flex;gap:0.6rem;margin-bottom:3rem;flex-wrap:wrap;justify-content:center}
+.rpill{padding:0.35rem 0.9rem;border-radius:99px;font-size:0.78rem;font-weight:600;font-family:var(--font-d)}
+.rpill-c{background:rgba(156,163,175,0.1);border:1px solid var(--common);color:var(--common)}
+.rpill-r{background:rgba(96,165,250,0.1);border:1px solid var(--rare);color:var(--rare)}
+.rpill-u{background:rgba(192,132,252,0.12);border:1px solid var(--ultra);color:var(--ultra)}
+.rpill-l{background:rgba(251,191,36,0.1);border:1px solid var(--legendary);color:var(--legendary);
+  animation:legendGlow 2s ease infinite}
+@keyframes legendGlow{0%,100%{box-shadow:0 0 6px rgba(251,191,36,0.2)}50%{box-shadow:0 0 18px rgba(251,191,36,0.5)}}
+.cta-btn{background:linear-gradient(135deg,var(--accent),var(--ultra));border:none;border-radius:99px;
+  padding:1rem 2.8rem;color:#fff;font-family:var(--font-d);font-size:1.25rem;font-weight:700;cursor:pointer;
+  transition:all 0.25s;box-shadow:0 0 40px rgba(255,110,180,0.25)}
+.cta-btn:hover{transform:translateY(-3px);box-shadow:0 8px 50px rgba(255,110,180,0.45)}
+
+/* ── MAP VIEW ── */
+#view-map{padding:64px 0 0}
+.map-bar{padding:1rem 2rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;
+  border-bottom:0.5px solid var(--border);background:rgba(7,8,15,0.6);backdrop-filter:blur(16px)}
+.map-bar h2{font-family:var(--font-d);font-size:1.2rem;font-weight:600;white-space:nowrap}
+.map-search-wrap{display:flex;gap:0.5rem;flex:1;max-width:380px}
+.map-search-wrap input{flex:1;background:var(--bg3);border:0.5px solid var(--border);border-radius:10px;
+  padding:0.55rem 1rem;color:var(--text);font-family:var(--font-b);font-size:0.85rem;outline:none;transition:border-color 0.2s}
+.map-search-wrap input::placeholder{color:var(--muted)}
+.map-search-wrap input:focus{border-color:var(--accent2)}
+.map-search-wrap button{background:var(--accent2);border:none;border-radius:10px;padding:0.55rem 1rem;
+  color:#000;font-weight:600;cursor:pointer;font-size:0.85rem;transition:background 0.2s}
+.map-search-wrap button:hover{background:#6ee7f7}
+#map-wrap{position:relative;height:calc(100vh - 130px);overflow:hidden;background:#0d1320}
+#map{height:100%;width:100%}
+/* Prevent infinite world tiling */
+.leaflet-container{background:#0d1320 !important}
+
+/* Custom popup */
+.gg-popup{background:var(--bg2);border:0.5px solid rgba(255,110,180,0.3);border-radius:14px;
+  padding:1.1rem 1.25rem;min-width:210px;font-family:var(--font-b);box-shadow:0 8px 40px rgba(0,0,0,0.5)}
+.gg-popup h3{font-family:var(--font-d);font-size:1.05rem;margin-bottom:0.2rem;color:var(--text)}
+.gg-popup p{color:var(--muted);font-size:0.78rem;margin-bottom:0.85rem}
+.gg-popup-btn{width:100%;background:linear-gradient(135deg,var(--accent),var(--ultra));border:none;
+  border-radius:8px;padding:0.6rem;color:#fff;font-family:var(--font-d);font-size:1rem;font-weight:600;cursor:pointer;transition:transform 0.15s}
+.gg-popup-btn:hover{transform:scale(1.02)}
+.leaflet-popup-content-wrapper,.leaflet-popup-tip-container{display:none!important}
+.custom-marker{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--ultra));
+  display:flex;align-items:center;justify-content:center;font-size:1.1rem;cursor:pointer;
+  box-shadow:0 0 0 3px rgba(255,110,180,0.3),0 4px 16px rgba(0,0,0,0.4);
+  transition:transform 0.2s;border:2px solid rgba(255,255,255,0.2)}
+.custom-marker:hover{transform:scale(1.15)}
+
+/* ── GACHA MACHINE OVERLAY ── */
+.machine-overlay{position:fixed;inset:0;z-index:2000;background:rgba(4,5,10,0.92);
+  backdrop-filter:blur(12px);display:none;align-items:center;justify-content:center;flex-direction:column}
+.machine-overlay.open{display:flex}
+.machine-wrap{position:relative;display:flex;flex-direction:column;align-items:center}
+.machine-loc{font-family:var(--font-m);font-size:0.82rem;color:var(--muted);margin-bottom:1.5rem;
+  display:flex;align-items:center;gap:0.4rem}
+
+/* The machine SVG container */
+.machine-svg-wrap{position:relative;width:300px;height:380px}
+
+/* Ball inside machine */
+.machine-ball{position:absolute;left:50%;top:130px;transform:translateX(-50%);
+  width:110px;height:110px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,rgba(255,255,255,0.4),transparent 50%),
+             linear-gradient(135deg,#c084fc,#ff6eb4);
+  box-shadow:0 0 30px rgba(192,132,252,0.4),inset 0 -4px 12px rgba(0,0,0,0.3);
+  cursor:pointer;transition:transform 0.2s;display:flex;align-items:center;justify-content:center;
+  font-size:2.5rem;animation:ballFloat 2.5s ease-in-out infinite}
+@keyframes ballFloat{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-8px)}}
+.machine-ball:hover{box-shadow:0 0 50px rgba(255,110,180,0.6),inset 0 -4px 12px rgba(0,0,0,0.3)}
+
+/* Lever */
+.lever-wrap{position:absolute;right:-20px;top:100px;width:50px;height:140px;cursor:pointer}
+.lever-base{position:absolute;bottom:0;left:50%;transform:translateX(-50%);
+  width:24px;height:24px;border-radius:50%;background:#2a3050;border:2px solid #3a4570}
+.lever-rod{position:absolute;bottom:12px;left:50%;transform:translateX(-50%) rotate(15deg);
+  transform-origin:bottom center;width:8px;height:100px;background:linear-gradient(to right,#4a5580,#6a7aaa);
+  border-radius:4px;transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1)}
+.lever-rod.pulled{transform:translateX(-50%) rotate(-35deg)}
+.lever-knob{position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:22px;height:22px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#ff9de0,var(--accent));
+  box-shadow:0 0 12px rgba(255,110,180,0.5);border:2px solid rgba(255,255,255,0.2)}
+
+/* Chute at bottom */
+.machine-chute{position:absolute;bottom:0;left:50%;transform:translateX(-50%);
+  width:80px;height:40px;background:#0d1320;border:2px solid #2a3050;
+  border-radius:0 0 12px 12px;border-top:none;overflow:hidden}
+.chute-ball{position:absolute;width:50px;height:50px;border-radius:50%;
+  top:-60px;left:50%;transform:translateX(-50%);transition:top 0.4s cubic-bezier(0.22,1,0.36,1);
+  display:flex;align-items:center;justify-content:center;font-size:1.5rem}
+.chute-ball.dropped{top:50%;transform:translateX(-50%) translateY(-50%)}
+
+.pull-hint{font-family:var(--font-d);font-size:1rem;color:var(--muted);margin-top:1.5rem;
+  animation:hintPulse 2s ease infinite}
+@keyframes hintPulse{0%,100%{opacity:0.5}50%{opacity:1}}
+.pull-counter{font-family:var(--font-m);font-size:0.75rem;color:var(--muted);margin-top:0.5rem}
+.pull-counter span{color:var(--accent2)}
+.close-machine{position:absolute;top:1.5rem;right:1.5rem;background:transparent;border:0.5px solid var(--border);
+  color:var(--muted);width:36px;height:36px;border-radius:50%;font-size:1rem;cursor:pointer;
+  transition:all 0.2s;display:flex;align-items:center;justify-content:center}
+.close-machine:hover{border-color:var(--text);color:var(--text)}
+
+/* ── BALL CRACK / RESULT ANIMATION ── */
+.ball-reveal-overlay{position:fixed;inset:0;z-index:3000;display:none;
+  align-items:center;justify-content:center;flex-direction:column;
+  background:rgba(4,5,10,0.95)}
+.ball-reveal-overlay.open{display:flex}
+
+.crack-ball{width:160px;height:160px;border-radius:50%;position:relative;margin-bottom:2rem;cursor:pointer}
+.crack-half-top,.crack-half-bot{position:absolute;width:100%;height:50%;left:0;overflow:hidden;transition:transform 0.5s cubic-bezier(0.34,1.56,0.64,1)}
+.crack-half-top{top:0;border-radius:80px 80px 0 0}
+.crack-half-bot{bottom:0;border-radius:0 0 80px 80px}
+.crack-half-top.open{transform:translateY(-60px) rotate(-8deg)}
+.crack-half-bot.open{transform:translateY(60px) rotate(8deg)}
+.crack-inner{width:100%;height:200%;position:absolute}
+.crack-half-top .crack-inner{top:0}
+.crack-half-bot .crack-inner{bottom:0}
+
+.reveal-card{opacity:0;transform:scale(0.5) translateY(30px);transition:all 0.5s cubic-bezier(0.34,1.56,0.64,1);
+  max-width:460px;width:90%;background:var(--card);border-radius:20px;overflow:hidden;
+  margin-top:-1rem;position:relative}
+.reveal-card.open{opacity:1;transform:scale(1) translateY(0)}
+.reveal-card-header{padding:1.75rem 1.75rem 1rem;text-align:center;position:relative}
+.reveal-rarity-badge{display:inline-block;padding:0.25rem 0.85rem;border-radius:99px;
+  font-family:var(--font-d);font-size:0.85rem;font-weight:600;margin-bottom:0.85rem}
+.badge-common{background:rgba(156,163,175,0.15);border:1px solid var(--common);color:var(--common)}
+.badge-rare{background:rgba(96,165,250,0.15);border:1px solid var(--rare);color:var(--rare)}
+.badge-ultra{background:rgba(192,132,252,0.15);border:1px solid var(--ultra);color:var(--ultra)}
+.badge-legendary{background:rgba(251,191,36,0.15);border:1px solid var(--legendary);color:var(--legendary);animation:legendGlow 2s ease infinite}
+.reveal-emoji{font-size:3.5rem;display:block;margin-bottom:0.5rem}
+.reveal-title{font-family:var(--font-d);font-size:1.4rem;font-weight:700;margin-bottom:0.2rem}
+.reveal-loc{font-family:var(--font-m);font-size:0.75rem;color:var(--muted)}
+.reveal-card-body{padding:0 1.75rem 1.75rem}
+.reveal-desc{background:var(--bg3);border-radius:12px;padding:1.1rem;font-size:0.88rem;
+  line-height:1.75;color:var(--text);margin-bottom:1rem}
+.reveal-meta{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1rem}
+.rmeta{font-size:0.72rem;font-family:var(--font-m);color:var(--muted)}
+.reveal-coupon{background:linear-gradient(135deg,rgba(251,191,36,0.08),rgba(251,191,36,0.03));
+  border:1px dashed var(--legendary);border-radius:10px;padding:0.85rem;margin-bottom:1rem;text-align:center}
+.coupon-label{font-family:var(--font-m);font-size:0.65rem;color:var(--legendary);letter-spacing:0.1em;text-transform:uppercase}
+.coupon-val{font-family:var(--font-d);font-size:1.1rem;font-weight:700;color:var(--legendary)}
+.coupon-code{font-family:var(--font-m);font-size:0.75rem;color:var(--muted);margin-top:0.15rem}
+.reveal-actions{display:flex;flex-direction:column;gap:0.6rem}
+.proof-zone{background:var(--bg3);border:1.5px dashed var(--border);border-radius:10px;
+  padding:1rem;text-align:center;cursor:pointer;transition:all 0.2s}
+.proof-zone:hover{border-color:var(--green);background:rgba(46,204,135,0.04)}
+.proof-zone input{display:none}
+.proof-zone p{font-size:0.78rem;color:var(--muted);margin-top:0.2rem}
+.btn-pull-again{background:linear-gradient(135deg,var(--accent),var(--ultra));border:none;
+  border-radius:99px;padding:0.8rem;color:#fff;font-family:var(--font-d);font-size:1.05rem;
+  font-weight:700;cursor:pointer;transition:all 0.2s;width:100%}
+.btn-pull-again:hover{transform:translateY(-2px);box-shadow:0 6px 30px rgba(255,110,180,0.4)}
+.btn-save-log{background:transparent;border:0.5px solid var(--border);border-radius:99px;
+  padding:0.65rem;color:var(--muted);font-family:var(--font-b);font-size:0.85rem;cursor:pointer;transition:all 0.2s;width:100%}
+.btn-save-log:hover{border-color:var(--green);color:var(--green)}
+
+/* rarity glow rings on card */
+.reveal-card.rare{box-shadow:0 0 0 1px var(--rare),0 0 40px rgba(96,165,250,0.2)}
+.reveal-card.ultra{box-shadow:0 0 0 1px var(--ultra),0 0 50px rgba(192,132,252,0.3)}
+.reveal-card.legendary{box-shadow:0 0 0 2px var(--legendary),0 0 80px rgba(251,191,36,0.4)}
+
+/* loading in card */
+.loading-dots{display:flex;gap:5px;justify-content:center;padding:1rem 0}
+.loading-dots span{width:7px;height:7px;border-radius:50%;background:var(--accent);
+  animation:dotB 1.2s ease-in-out infinite}
+.loading-dots span:nth-child(2){animation-delay:.2s}
+.loading-dots span:nth-child(3){animation-delay:.4s}
+@keyframes dotB{0%,100%{transform:scale(0.5);opacity:.3}50%{transform:scale(1);opacity:1}}
+
+/* ── COSMETIC OVERLAY ── */
+.cosmetic-overlay{position:fixed;inset:0;z-index:4000;background:rgba(4,5,10,0.95);
+  display:none;align-items:center;justify-content:center;flex-direction:column;text-align:center}
+.cosmetic-overlay.open{display:flex;animation:fadeIn 0.3s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.cos-icon{font-size:7rem;display:block;margin-bottom:0.75rem;
+  animation:cosIn 0.6s cubic-bezier(0.34,1.56,0.64,1);
+  filter:drop-shadow(0 0 40px rgba(255,110,180,0.7))}
+@keyframes cosIn{from{opacity:0;transform:scale(0.3) rotate(-20deg)}to{opacity:1;transform:scale(1) rotate(0)}}
+.cos-name{font-family:var(--font-d);font-size:2.2rem;font-weight:700;margin-bottom:0.4rem}
+.cos-type{font-family:var(--font-m);font-size:0.82rem;color:var(--muted);margin-bottom:2rem}
+.particles-wrap{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.pt{position:absolute;border-radius:50%;animation:ptFly var(--d,.8s) ease-out forwards var(--del,0s);opacity:0}
+@keyframes ptFly{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--tx,0),var(--ty,0)) scale(0)}}
+
+/* ── MODAL ── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);
+  z-index:5000;display:none;align-items:center;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:var(--bg2);border:0.5px solid var(--border);border-radius:20px;padding:2.25rem;
+  max-width:420px;width:90%;animation:modalIn 0.3s cubic-bezier(0.34,1.56,0.64,1)}
+@keyframes modalIn{from{opacity:0;transform:scale(0.88) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.modal h2{font-family:var(--font-d);font-size:1.45rem;margin-bottom:0.4rem}
+.modal p{color:var(--muted);font-size:0.875rem;line-height:1.65;margin-bottom:1.25rem}
+.modal input{width:100%;background:var(--bg3);border:0.5px solid var(--border);border-radius:10px;
+  padding:0.8rem 1rem;color:var(--text);font-family:var(--font-m);font-size:0.82rem;margin-bottom:1rem;
+  outline:none;transition:border-color 0.2s}
+.modal input:focus{border-color:var(--accent)}
+.modal-row{display:flex;gap:0.75rem}
+.mbtn{padding:0.7rem 1.5rem;border-radius:99px;border:none;font-family:var(--font-d);
+  font-size:1rem;font-weight:600;cursor:pointer;transition:all 0.2s}
+.mbtn-p{background:var(--accent);color:#fff;flex:1}
+.mbtn-p:hover{background:#ff9dd4;transform:translateY(-1px)}
+.mbtn-g{background:transparent;border:0.5px solid var(--border);color:var(--muted)}
+.mbtn-g:hover{color:var(--text);border-color:rgba(255,255,255,0.2)}
+
+/* ── PROFILE ── */
+#view-profile{padding:64px 0 2rem;max-width:820px;margin:0 auto;padding-left:2rem;padding-right:2rem}
+.prof-hero{display:flex;align-items:flex-start;gap:2rem;margin:2rem 0;flex-wrap:wrap}
+.avatar-ring{width:110px;height:110px;border-radius:50%;padding:3px;
+  background:linear-gradient(135deg,var(--accent),var(--ultra));flex-shrink:0}
+.avatar-inner{width:100%;height:100%;border-radius:50%;background:var(--bg3);
+  display:flex;align-items:center;justify-content:center;font-size:3rem}
+.prof-info{flex:1}
+.prof-name{font-family:var(--font-d);font-size:2rem;font-weight:700;margin-bottom:0.2rem}
+.prof-handle{font-family:var(--font-m);font-size:0.82rem;color:var(--muted);margin-bottom:1rem}
+.prof-stats{display:flex;gap:1.5rem;flex-wrap:wrap}
+.pstat{text-align:center}
+.pstat-n{font-family:var(--font-d);font-size:1.6rem;font-weight:700;display:block}
+.pstat-l{font-size:0.7rem;color:var(--muted);font-family:var(--font-m)}
+.sec-head{font-family:var(--font-d);font-size:1.1rem;font-weight:600;
+  margin:2rem 0 0.85rem;display:flex;align-items:center;gap:0.6rem}
+.sec-head::after{content:'';flex:1;height:0.5px;background:var(--border)}
+.inv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:0.65rem;margin-bottom:1.5rem}
+.inv-item{background:var(--bg3);border:0.5px solid var(--border);border-radius:12px;
+  padding:0.7rem;text-align:center;cursor:pointer;transition:all 0.2s;position:relative}
+.inv-item:hover{border-color:var(--accent);transform:translateY(-2px)}
+.inv-item.equipped{border-color:var(--green);background:rgba(46,204,135,0.05)}
+.inv-item.equipped::after{content:'✓';position:absolute;top:3px;right:5px;font-size:0.55rem;color:var(--green)}
+.inv-em{font-size:1.7rem;display:block;margin-bottom:0.2rem}
+.inv-nm{font-size:0.58rem;color:var(--muted);font-family:var(--font-m);line-height:1.2}
+.log-list{display:flex;flex-direction:column;gap:0.65rem;margin-bottom:2rem}
+.log-item{background:var(--bg3);border:0.5px solid var(--border);border-radius:12px;
+  padding:0.9rem 1.1rem;display:flex;align-items:center;gap:1rem}
+.log-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.log-info{flex:1}
+.log-nm{font-weight:500;font-size:0.875rem}
+.log-loc{font-size:0.7rem;color:var(--muted);font-family:var(--font-m)}
+.log-right{text-align:right;font-size:0.68rem;color:var(--muted);font-family:var(--font-m)}
+.log-ver{color:var(--green);font-size:0.68rem}
+.empty-st{text-align:center;padding:2.5rem;color:var(--muted);font-size:0.875rem}
+.empty-st span{font-size:2rem;display:block;margin-bottom:0.5rem}
+
+/* ── EFFECTS ── */
+.confetti-layer{position:fixed;inset:0;pointer-events:none;z-index:9999;overflow:hidden}
+.cf{position:absolute;animation:cfFly var(--d,1.5s) ease-out forwards var(--del,0s);opacity:0}
+@keyframes cfFly{0%{opacity:1;transform:translate(0,0) rotate(0)}100%{opacity:0;transform:translate(var(--tx,0),var(--ty,0)) rotate(var(--r,360deg))}}
+.rarity-flash{position:fixed;inset:0;z-index:1500;pointer-events:none;opacity:0;transition:opacity 0.1s}
+.rf-rare{background:radial-gradient(circle at center,rgba(96,165,250,0.25) 0%,transparent 65%)}
+.rf-ultra{background:radial-gradient(circle at center,rgba(192,132,252,0.3) 0%,transparent 65%)}
+.rf-legendary{background:radial-gradient(circle at center,rgba(251,191,36,0.4) 0%,transparent 65%)}
+.rarity-flash.on{opacity:1}
+.toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(80px);
+  background:var(--bg2);border:0.5px solid var(--border);border-radius:99px;
+  padding:0.65rem 1.4rem;font-size:0.85rem;color:var(--text);z-index:9000;
+  transition:transform 0.3s ease;white-space:nowrap;pointer-events:none}
+.toast.on{transform:translateX(-50%) translateY(0)}
+.toast.ok{border-color:var(--green);color:var(--green)}
+.toast.err{border-color:#f87171;color:#f87171}
+
+/* leaflet overrides */
+.leaflet-tile-pane{filter:saturate(0.6) brightness(0.7) hue-rotate(200deg)}
+.leaflet-control-attribution{display:none}
+.leaflet-control-zoom a{background:var(--bg2)!important;color:var(--text)!important;border-color:var(--border)!important}
+
+@media(max-width:600px){
+  .h1{font-size:2.8rem}
+  nav{padding:0 1rem}
+  .nav-right{gap:0.4rem}
+  .nav-pill span{display:none}
+  .prof-hero{flex-direction:column;align-items:center;text-align:center}
+  .prof-stats{justify-content:center}
+}
+</style>
+</head>
+<body>
+
+<!-- BG -->
+<div class="bg-canvas">
+  <div class="bg-gradient"></div>
+  <div class="grid-overlay"></div>
+  <div class="floating-orbs" id="floatingOrbs"></div>
+</div>
+
+<!-- RARITY FLASH -->
+<div class="rarity-flash" id="rFlash"></div>
+
+<!-- CONFETTI -->
+<div class="confetti-layer" id="confettiLayer"></div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- API KEY MODAL -->
+<div class="modal-bg" id="apiModal">
+  <div class="modal">
+    <h2>🗝️ Anthropic API Key</h2>
+    <p>GachaGo uses Claude AI to generate personalized adventure suggestions. Your key is stored in your browser only and sent directly to Anthropic — never to any server.</p>
+    <input type="password" id="apiInput" placeholder="sk-ant-api03-..."/>
+    <div class="modal-row">
+      <button class="mbtn mbtn-g" onclick="closeModal('apiModal')">Cancel</button>
+      <button class="mbtn mbtn-p" onclick="saveKey()">Let's Go ✨</button>
+    </div>
+  </div>
+</div>
+
+<!-- COSMETIC OVERLAY -->
+<div class="cosmetic-overlay" id="cosOverlay">
+  <div class="particles-wrap" id="particles"></div>
+  <div style="position:relative;z-index:1">
+    <span class="cos-icon" id="cosIcon">🌺</span>
+    <div class="cos-name" id="cosName">Hawaii Sticker</div>
+    <div class="cos-type" id="cosType">Location Sticker · Common</div>
+    <button class="cta-btn" style="font-size:1rem;padding:0.75rem 2rem" onclick="closeCos()">Equip It! 🎒</button>
+  </div>
+</div>
+
+<!-- GACHA MACHINE OVERLAY -->
+<div class="machine-overlay" id="machineOverlay">
+  <button class="close-machine" onclick="closeMachine()">✕</button>
+  <div class="machine-wrap">
+    <div class="machine-loc" id="machineLoc">📍 Somewhere on Earth</div>
+
+    <div class="machine-svg-wrap">
+      <!-- Machine body drawn with CSS divs -->
+      <svg width="300" height="380" viewBox="0 0 300 380" fill="none" xmlns="http://www.w3.org/2000/svg" style="position:absolute;top:0;left:0;pointer-events:none">
+        <!-- Body -->
+        <rect x="40" y="60" width="220" height="280" rx="24" fill="#111827" stroke="#1e2a45" stroke-width="1.5"/>
+        <!-- Top dome -->
+        <ellipse cx="150" cy="60" rx="110" ry="40" fill="#0d1520" stroke="#1e2a45" stroke-width="1.5"/>
+        <!-- Window ring -->
+        <circle cx="150" cy="175" r="75" fill="#070b14" stroke="#1e2a45" stroke-width="2"/>
+        <circle cx="150" cy="175" r="62" fill="#070b14" stroke="#2a3a5a" stroke-width="1"/>
+        <!-- Brand text -->
+        <text x="150" y="52" text-anchor="middle" font-family="Fredoka" font-size="13" font-weight="600" fill="#5a6380">GACHAGO</text>
+        <!-- Bottom chute outline -->
+        <rect x="110" y="320" width="80" height="30" rx="6" fill="#070b14" stroke="#1e2a45" stroke-width="1.5"/>
+        <!-- Decorative dots -->
+        <circle cx="70" cy="90" r="4" fill="#1e2a45"/>
+        <circle cx="230" cy="90" r="4" fill="#1e2a45"/>
+        <circle cx="70" cy="320" r="4" fill="#1e2a45"/>
+        <circle cx="230" cy="320" r="4" fill="#1e2a45"/>
+        <!-- Shine on dome -->
+        <ellipse cx="130" cy="45" rx="30" ry="10" fill="rgba(255,255,255,0.04)"/>
+        <!-- Lever base plate -->
+        <rect x="238" y="155" width="32" height="80" rx="8" fill="#0d1520" stroke="#1e2a45" stroke-width="1"/>
+      </svg>
+
+      <!-- The floating ball in the window -->
+      <div class="machine-ball" id="machineBall" onclick="pullLever()">🌍</div>
+
+      <!-- Lever -->
+      <div class="lever-wrap" id="leverWrap" onclick="pullLever()">
+        <div class="lever-rod" id="leverRod">
+          <div class="lever-knob"></div>
+        </div>
+        <div class="lever-base"></div>
+      </div>
+
+      <!-- Chute ball -->
+      <div class="machine-chute">
+        <div class="chute-ball" id="chuteBall"></div>
+      </div>
+    </div>
+
+    <div class="pull-hint" id="pullHint">Pull the lever to reveal your adventure!</div>
+    <div class="pull-counter">Pulls today: <span id="pullsToday">0</span> / <span id="pullsMax">5</span> — <span id="pullsLeft" style="color:var(--accent2)">5 remaining</span></div>
+  </div>
+</div>
+
+<!-- BALL REVEAL / RESULT OVERLAY -->
+<div class="ball-reveal-overlay" id="revealOverlay">
+  <!-- Cracking ball -->
+  <div class="crack-ball" id="crackBall" onclick="openBall()">
+    <div class="crack-half-top" id="crackTop">
+      <div class="crack-inner" id="crackInnerTop"></div>
+    </div>
+    <div class="crack-half-bot" id="crackBot">
+      <div class="crack-inner" id="crackInnerBot"></div>
+    </div>
+  </div>
+  <div style="font-family:var(--font-d);font-size:1rem;color:var(--muted);margin-bottom:1rem" id="tapHint">Tap to open!</div>
+
+  <!-- Adventure card (hidden until ball opened) -->
+  <div class="reveal-card" id="revealCard">
+    <div class="reveal-card-header">
+      <span class="reveal-rarity-badge" id="revealBadge">Common</span>
+      <span class="reveal-emoji" id="revealEmoji">🌴</span>
+      <div class="reveal-title" id="revealTitle">Loading...</div>
+      <div class="reveal-loc" id="revealLoc">📍 Location</div>
+    </div>
+    <div class="reveal-card-body">
+      <div class="reveal-desc" id="revealDesc">
+        <div class="loading-dots"><span></span><span></span><span></span></div>
+      </div>
+      <div class="reveal-meta" id="revealMeta"></div>
+      <div class="reveal-coupon" id="revealCoupon" style="display:none">
+        <div class="coupon-label">🎁 Special Offer</div>
+        <div class="coupon-val" id="couponVal"></div>
+        <div class="coupon-code" id="couponCode"></div>
+      </div>
+      <div class="reveal-actions">
+        <label class="proof-zone" id="proofZone">
+          <input type="file" accept="image/*" onchange="handleProof(this)"/>
+          <span style="font-size:1.25rem">📸</span>
+          <strong style="font-size:0.85rem">Upload Proof of Visit</strong>
+          <p>Go do it → photo proof → earn cosmetics!</p>
+        </label>
+        <button class="btn-pull-again" onclick="resetForNewPull()">🎰 Pull Again</button>
+        <button class="btn-save-log" onclick="saveLog()">💾 Save to Travel Log</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="logo" onclick="goHome()" style="cursor:pointer">
+    <span class="logo-gacha">Gacha</span><span class="logo-go">Go</span><span class="logo-globe">🌍</span>
+  </div>
+  <div class="nav-right">
+    <span class="pulls-badge" id="navPulls">🎰 5 pulls left</span>
+    <button class="nav-pill" id="navExplore" onclick="showView('map')"><span>🗺</span> <span>Explore</span></button>
+    <button class="nav-pill" id="navProfile" onclick="showView('profile')"><span>👤</span> <span>Profile</span></button>
+    <button class="key-btn" onclick="openModal('apiModal')" id="keyBtn">API Key</button>
+  </div>
+</nav>
+
+<!-- LANDING -->
+<div class="view active" id="view-landing">
+  <div class="landing-tag">pull your next adventure</div>
+  <h1 class="h1">The World is<br/><em>Your Gacha Machine</em></h1>
+  <p class="landing-sub">Pick any destination on Earth. Pull the lever. Get a Claude-crafted adventure. Go do it. Earn cosmetics. Build your travel identity.</p>
+  <div class="rarity-row">
+    <span class="rpill rpill-c">⚪ Common</span>
+    <span class="rpill rpill-r">🔵 Rare</span>
+    <span class="rpill rpill-u">💜 Ultra Rare</span>
+    <span class="rpill rpill-l">⭐ Legendary</span>
+  </div>
+  <button class="cta-btn" onclick="startExploring()">Start Exploring 🌍</button>
+</div>
+
+<!-- MAP -->
+<div class="view" id="view-map">
+  <div class="map-bar">
+    <h2>🌍 Pick Your Destination</h2>
+    <div class="map-search-wrap">
+      <input type="text" id="searchInput" placeholder="Search a city..." onkeydown="if(event.key==='Enter')searchLoc()"/>
+      <button onclick="searchLoc()">Go</button>
+    </div>
+  </div>
+  <div id="map-wrap"><div id="map"></div></div>
+</div>
+
+<!-- PROFILE -->
+<div class="view" id="view-profile">
+  <div class="prof-hero">
+    <div class="avatar-ring">
+      <div class="avatar-inner" id="avatarInner">🧑‍🌏</div>
+    </div>
+    <div class="prof-info">
+      <div class="prof-name" id="profName">Traveler</div>
+      <div class="prof-handle" id="profHandle">@gachago_explorer</div>
+      <div class="prof-stats">
+        <div class="pstat"><span class="pstat-n" id="sPulls" style="color:var(--accent)">0</span><span class="pstat-l">Pulls</span></div>
+        <div class="pstat"><span class="pstat-n" id="sRare" style="color:var(--rare)">0</span><span class="pstat-l">Rare+</span></div>
+        <div class="pstat"><span class="pstat-n" id="sLeg" style="color:var(--legendary)">0</span><span class="pstat-l">Legendary</span></div>
+        <div class="pstat"><span class="pstat-n" id="sVerif" style="color:var(--green)">0</span><span class="pstat-l">Verified</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="sec-head">🎒 Cosmetic Inventory</div>
+  <div class="inv-grid" id="invGrid"></div>
+  <div class="sec-head">🗺 Travel Log</div>
+  <div class="log-list" id="logList"></div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// ── CONFIG ─────────────────────────────────────
+const MODEL = 'claude-sonnet-4-6';
+const MAX_PULLS = 5;
+
+// ── STATE ──────────────────────────────────────
+let S = {
+  apiKey: localStorage.getItem('gg_key') || '',
+  currentLoc: null,
+  currentResult: null,
+  profile: JSON.parse(localStorage.getItem('gg_profile') || 'null') || {
+    avatar:'🧑‍🌏', equip:[], inventory:[], log:[],
+    stats:{ pulls:0, rare:0, legendary:0, verified:0 },
+    daily:{ date:'', count:0 }
+  }
+};
+
+// ── COSMETICS ──────────────────────────────────
+const COSPOOL = [
+  {id:'c1',name:'🌺 Hawaii',emoji:'🌺',type:'Sticker',rarity:'common'},
+  {id:'c2',name:'🗼 Eiffel',emoji:'🗼',type:'Sticker',rarity:'common'},
+  {id:'c3',name:'🗽 Liberty',emoji:'🗽',type:'Sticker',rarity:'common'},
+  {id:'c4',name:'🌊 Surfer',emoji:'🌊',type:'Sticker',rarity:'common'},
+  {id:'c5',name:'🏝 Islander',emoji:'🏝',type:'Sticker',rarity:'rare'},
+  {id:'c6',name:'⛩ Torii',emoji:'⛩',type:'Sticker',rarity:'rare'},
+  {id:'c7',name:'🏔 Summit',emoji:'🏔',type:'Sticker',rarity:'rare'},
+  {id:'c8',name:'🐉 Dragon',emoji:'🐉',type:'Sticker',rarity:'ultra'},
+  {id:'c9',name:'🌋 Volcano',emoji:'🌋',type:'Sticker',rarity:'ultra'},
+  {id:'a1',name:'🤠 Explorer',emoji:'🤠',type:'Avatar',rarity:'common'},
+  {id:'a2',name:'🧳 Globetrotter',emoji:'🧳',type:'Avatar',rarity:'common'},
+  {id:'a3',name:'🧙 Wanderer',emoji:'🧙',type:'Avatar',rarity:'rare'},
+  {id:'a4',name:'🦸 Adventurer',emoji:'🦸',type:'Avatar',rarity:'rare'},
+  {id:'a5',name:'🧜 Sea Spirit',emoji:'🧜',type:'Avatar',rarity:'ultra'},
+  {id:'a6',name:'👑 Legend',emoji:'👑',type:'Avatar',rarity:'legendary'},
+  {id:'b1',name:'Ocean Border',emoji:'🌊',type:'Border',rarity:'rare'},
+  {id:'b2',name:'Sakura Border',emoji:'🌸',type:'Border',rarity:'ultra'},
+  {id:'b3',name:'Gold Border',emoji:'✨',type:'Border',rarity:'ultra'},
+  {id:'b4',name:'Rainbow Border',emoji:'🌈',type:'Border',rarity:'legendary'},
+  {id:'b5',name:'☄️ Meteor',emoji:'☄️',type:'Sticker',rarity:'legendary'},
+];
+
+const RARITY_CFG = {
+  common:    {label:'Common',    color:'var(--common)',    badge:'badge-common',    emoji:'⚪', ballGrad:'#4b5563,#6b7280', chance:0.60},
+  rare:      {label:'Rare',      color:'var(--rare)',      badge:'badge-rare',      emoji:'🔵', ballGrad:'#1d4ed8,#60a5fa', chance:0.30},
+  ultra:     {label:'Ultra Rare',color:'var(--ultra)',     badge:'badge-ultra',     emoji:'💜', ballGrad:'#7c3aed,#c084fc', chance:0.08},
+  legendary: {label:'Legendary', color:'var(--legendary)', badge:'badge-legendary', emoji:'⭐', ballGrad:'#b45309,#fbbf24', chance:0.02},
+};
+
+// ── BG ORBS ────────────────────────────────────
+function buildBG() {
+  const wrap = document.getElementById('floatingOrbs');
+  const orbs = [
+    {w:400,h:300,l:'-5%',t:'10%',c:'rgba(255,110,180,0.06)',d:'25s',tx:'40px',ty:'-30px',del:'0s'},
+    {w:500,h:400,l:'60%',t:'50%',c:'rgba(56,217,245,0.05)',d:'30s',tx:'-30px',ty:'40px',del:'-8s'},
+    {w:350,h:350,l:'30%',t:'-10%',c:'rgba(192,132,252,0.05)',d:'22s',tx:'25px',ty:'35px',del:'-12s'},
+    {w:300,h:250,l:'5%',t:'60%',c:'rgba(46,204,135,0.04)',d:'35s',tx:'-20px',ty:'-40px',del:'-5s'},
+  ];
+  orbs.forEach(o=>{
+    const d=document.createElement('div');
+    d.className='orb';
+    d.style.cssText=`width:${o.w}px;height:${o.h}px;left:${o.l};top:${o.t};background:${o.c};--d:${o.d};--tx:${o.tx};--ty:${o.ty};--del:${o.del}`;
+    wrap.appendChild(d);
+  });
+}
+
+// ── VIEWS ──────────────────────────────────────
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  document.querySelectorAll('.nav-pill').forEach(b=>b.classList.remove('active-view'));
+  if(name==='map'){document.getElementById('navExplore').classList.add('active-view');if(!window._mapDone)initMap()}
+  if(name==='profile'){document.getElementById('navProfile').classList.add('active-view');renderProfile()}
+}
+function goHome(){showView('landing');document.querySelectorAll('.nav-pill').forEach(b=>b.classList.remove('active-view'))}
+
+// ── KEY ────────────────────────────────────────
+function openModal(id){document.getElementById(id).classList.add('open')}
+function closeModal(id){document.getElementById(id).classList.remove('open')}
+function saveKey(){
+  const k=document.getElementById('apiInput').value.trim();
+  if(!k.startsWith('sk-ant-')){toast('Invalid key format','err');return}
+  S.apiKey=k;localStorage.setItem('gg_key',k);
+  closeModal('apiModal');
+  document.getElementById('keyBtn').textContent='🔑 Key Set';
+  toast('API key saved! Ready to pull ✨','ok');
+}
+function startExploring(){
+  if(!S.apiKey){openModal('apiModal');return}
+  showView('map');
+}
+
+// ── MAP ────────────────────────────────────────
+const PINS=[
+  {name:'Honolulu',country:'Hawaii, USA',lat:21.3069,lng:-157.8583,em:'🌺'},
+  {name:'Tokyo',country:'Japan',lat:35.6762,lng:139.6503,em:'⛩'},
+  {name:'Paris',country:'France',lat:48.8566,lng:2.3522,em:'🗼'},
+  {name:'New York',country:'USA',lat:40.7128,lng:-74.0060,em:'🗽'},
+  {name:'Bali',country:'Indonesia',lat:-8.4095,lng:115.1889,em:'🌴'},
+  {name:'Machu Picchu',country:'Peru',lat:-13.1631,lng:-72.5450,em:'🏔'},
+  {name:'Santorini',country:'Greece',lat:36.3932,lng:25.4615,em:'🏛'},
+  {name:'Kyoto',country:'Japan',lat:35.0116,lng:135.7681,em:'🌸'},
+  {name:'Sydney',country:'Australia',lat:-33.8688,lng:151.2093,em:'🦘'},
+  {name:'Cape Town',country:'South Africa',lat:-33.9249,lng:18.4241,em:'🌊'},
+  {name:'Reykjavik',country:'Iceland',lat:64.1466,lng:-21.9426,em:'🌋'},
+  {name:'Dubai',country:'UAE',lat:25.2048,lng:55.2708,em:'🏙'},
+  {name:'Marrakech',country:'Morocco',lat:31.6295,lng:-7.9811,em:'🌙'},
+  {name:'Queenstown',country:'New Zealand',lat:-45.0312,lng:168.6626,em:'🏔'},
+  {name:'Amalfi Coast',country:'Italy',lat:40.6340,lng:14.6027,em:'⛵'},
+];
+
+let map;
+function initMap(){
+  window._mapDone=true;
+  map=L.map('map',{
+    zoomControl:true,
+    attributionControl:false,
+    maxBounds:[[-85,-180],[85,180]],
+    maxBoundsViscosity:1.0,
+    minZoom:2,
+    worldCopyJump:false,
+  }).setView([20,10],2);
+
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_matter_all/{z}/{x}/{y}{r}.png',{
+    maxZoom:18,noWrap:true,
+  }).addTo(map);
+
+  // Add custom pins for popular destinations
+  PINS.forEach(p=>{
+    const el=document.createElement('div');
+    el.className='custom-marker';
+    el.textContent=p.em;
+    el.title=p.name;
+    const marker=L.marker([p.lat,p.lng],{icon:L.divIcon({html:el,className:'',iconSize:[36,36],iconAnchor:[18,18]})});
+    marker.addTo(map);
+    marker.on('click',()=>showPopup(p.lat,p.lng,p.name,p.country));
+  });
+
+  // Click anywhere
+  map.on('click',e=>reverseGeo(e.latlng.lat,e.latlng.lng));
+
+  // Custom popup div (not leaflet popup)
+  const popDiv=document.createElement('div');
+  popDiv.id='mapPopup';
+  popDiv.style.cssText='position:absolute;z-index:900;display:none;';
+  document.getElementById('map-wrap').appendChild(popDiv);
+}
+
+let activePopupMarker=null;
+function showPopup(lat,lng,name,country){
+  const popDiv=document.getElementById('mapPopup');
+  popDiv.style.display='block';
+  popDiv.innerHTML=`<div class="gg-popup">
+    <h3>${name}</h3><p>${country}</p>
+    <button class="gg-popup-btn" onclick="openMachine('${name}','${country}',${lat},${lng})">🎰 Pull Gacha Here!</button>
+  </div>`;
+  // Position near map center for simplicity
+  const pt=map.latLngToContainerPoint([lat,lng]);
+  popDiv.style.left=(pt.x-105)+'px';
+  popDiv.style.top=(pt.y-140)+'px';
+  map.on('click',()=>{popDiv.style.display='none'});
+}
+
+async function reverseGeo(lat,lng){
+  const popDiv=document.getElementById('mapPopup');
+  if(popDiv)popDiv.style.display='none';
+  try{
+    const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=8`);
+    const d=await r.json();
+    const name=d.address?.city||d.address?.town||d.address?.county||d.address?.country||'This Location';
+    const country=d.address?.country||'';
+    showPopup(lat,lng,name,country);
+  }catch{showPopup(lat,lng,'This Location','');}
+}
+
+async function searchLoc(){
+  const q=document.getElementById('searchInput').value.trim();
+  if(!q)return;
+  try{
+    const r=await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=1`);
+    const d=await r.json();
+    if(d.length){
+      const {lat,lon,display_name}=d[0];
+      map.setView([+lat,+lon],8);
+      const parts=display_name.split(',');
+      showPopup(+lat,+lon,parts[0],parts[parts.length-1].trim());
+    }else toast('Location not found','err');
+  }catch{toast('Search failed','err')}
+}
+
+// ── MACHINE ────────────────────────────────────
+function openMachine(name,country,lat,lng){
+  if(!S.apiKey){openModal('apiModal');return}
+  if(getDailyLeft()<=0){toast('No pulls left today! Come back tomorrow.','err');return}
+  S.currentLoc={name,country,lat,lng};
+  document.getElementById('machineLoc').textContent=`📍 ${name}${country?', '+country:''}`;
+  document.getElementById('machineBall').textContent='🌍';
+  document.getElementById('machineBall').style.background='';
+  document.getElementById('leverRod').classList.remove('pulled');
+  document.getElementById('chuteBall').classList.remove('dropped');
+  document.getElementById('pullHint').textContent='Pull the lever to reveal your adventure!';
+  updatePullDisplay();
+  document.getElementById('machineOverlay').classList.add('open');
+  const mapPopup=document.getElementById('mapPopup');
+  if(mapPopup)mapPopup.style.display='none';
+}
+function closeMachine(){document.getElementById('machineOverlay').classList.remove('open')}
+
+let pulling=false;
+function pullLever(){
+  if(pulling)return;
+  if(getDailyLeft()<=0){toast('No pulls left today!','err');return}
+  pulling=true;
+  const rod=document.getElementById('leverRod');
+  const ball=document.getElementById('machineBall');
+  const hint=document.getElementById('pullHint');
+  const chute=document.getElementById('chuteBall');
+
+  // Roll rarity
+  const rarity=rollRarity();
+  const rc=RARITY_CFG[rarity];
+
+  // 1. Pull lever
+  rod.classList.add('pulled');
+  hint.textContent='';
+
+  // 2. Ball spins and changes color
+  setTimeout(()=>{
+    ball.style.animation='none';
+    ball.style.background=`radial-gradient(circle at 35% 30%,rgba(255,255,255,0.4),transparent 50%),linear-gradient(135deg,${rc.ballGrad})`;
+    ball.style.boxShadow=`0 0 40px rgba(100,100,255,0.6)`;
+    ball.textContent='✨';
+    ball.style.animation='spin3d 0.4s linear infinite';
+  },300);
+
+  // 3. Ball drops to chute
+  setTimeout(()=>{
+    ball.style.opacity='0';
+    chute.style.background=`radial-gradient(circle at 35% 30%,rgba(255,255,255,0.3),transparent 50%),linear-gradient(135deg,${rc.ballGrad})`;
+    chute.textContent=rc.emoji;
+    chute.classList.add('dropped');
+
+    // Rarity flash
+    const fl=document.getElementById('rFlash');
+    fl.className=`rarity-flash rf-${rarity} on`;
+    setTimeout(()=>fl.className='rarity-flash',800);
+
+    if(rarity==='legendary')spawnConfetti();
+  },900);
+
+  // 4. Show crack reveal
+  setTimeout(()=>{
+    document.getElementById('machineOverlay').classList.remove('open');
+    ball.style.opacity='1';
+    ball.style.animation='ballFloat 2.5s ease-in-out infinite';
+    ball.style.background='';
+    chute.classList.remove('dropped');
+    rod.classList.remove('pulled');
+    pulling=false;
+
+    // Update stats
+    S.profile.daily.count++;
+    S.profile.stats.pulls++;
+    if(rarity!=='common')S.profile.stats.rare++;
+    if(rarity==='legendary')S.profile.stats.legendary++;
+    updatePullDisplay();
+    saveProfile();
+
+    openReveal(rarity,rc);
+  },1800);
+}
+
+// ── REVEAL ─────────────────────────────────────
+function openReveal(rarity,rc){
+  // Set up cracking ball
+  const ballGrad=`linear-gradient(135deg,${rc.ballGrad})`;
+  const topEl=document.getElementById('crackInnerTop');
+  const botEl=document.getElementById('crackInnerBot');
+  topEl.style.cssText=`height:200%;background:${ballGrad};border-radius:80px 80px 0 0`;
+  botEl.style.cssText=`height:200%;background:${ballGrad};position:absolute;bottom:0;width:100%;border-radius:0 0 80px 80px`;
+
+  document.getElementById('crackTop').classList.remove('open');
+  document.getElementById('crackBot').classList.remove('open');
+  document.getElementById('revealCard').classList.remove('open','rare','ultra','legendary');
+  document.getElementById('tapHint').style.display='block';
+
+  // Reset card
+  document.getElementById('revealBadge').className=`reveal-rarity-badge ${rc.badge}`;
+  document.getElementById('revealBadge').textContent=`${rc.emoji} ${rc.label}`;
+  document.getElementById('revealEmoji').textContent=getLocEmoji(S.currentLoc.name);
+  document.getElementById('revealTitle').textContent='Crafting your adventure...';
+  document.getElementById('revealLoc').textContent=`📍 ${S.currentLoc.name}${S.currentLoc.country?', '+S.currentLoc.country:''}`;
+  document.getElementById('revealDesc').innerHTML='<div class="loading-dots"><span></span><span></span><span></span></div>';
+  document.getElementById('revealMeta').innerHTML='';
+  document.getElementById('revealCoupon').style.display='none';
+  document.getElementById('revealCard').className=`reveal-card`;
+
+  document.getElementById('revealOverlay').classList.add('open');
+
+  // Store rarity for later
+  document.getElementById('crackBall').dataset.rarity=rarity;
+  document.getElementById('crackBall').dataset.rc=JSON.stringify(rc);
+
+  // Start fetching in background
+  fetchAdventure(rarity,rc);
+}
+
+function openBall(){
+  document.getElementById('crackTop').classList.add('open');
+  document.getElementById('crackBot').classList.add('open');
+  document.getElementById('tapHint').style.display='none';
+
+  const rarity=document.getElementById('crackBall').dataset.rarity;
+  const rc=JSON.parse(document.getElementById('crackBall').dataset.rc||'{}');
+
+  setTimeout(()=>{
+    const card=document.getElementById('revealCard');
+    card.classList.add('open');
+    if(rarity!=='common')card.classList.add(rarity);
+    if(rarity==='legendary')spawnConfetti();
+  },300);
+}
+
+async function fetchAdventure(rarity,rc){
+  const loc=S.currentLoc;
+  const depthMap={
+    common:'a simple, accessible activity or experience (2-3 sentences)',
+    rare:'a detailed experience with insider tips, best time to go, and what makes it special (3-4 sentences)',
+    ultra:'a vivid, extraordinary off-the-beaten-path experience most tourists never discover (4-5 sentences with sensory detail)',
+    legendary:'a once-in-a-lifetime, magical, defining experience written with wonder and poetry (4-5 sentences, unforgettable)'
+  };
+  const prompt=`You are GachaGo, a travel adventure AI. Generate a ${rc.label} rarity suggestion for ${loc.name}${loc.country?', '+loc.country:''}.
+
+It should be ${depthMap[rarity]}.
+${rarity==='ultra'||rarity==='legendary'?'Include a mock local business deal (e.g. "20% off at sunset boat tours").':''}
+
+Reply ONLY with valid JSON (no markdown):
+{
+  "title": "Short catchy activity title, max 5 words",
+  "emoji": "one perfect emoji",
+  "description": "The full description",
+  "bestTime": "e.g. Sunrise or Golden hour",
+  "duration": "e.g. 2-3 hours",
+  "difficulty": "Easy / Moderate / Adventurous"${rarity==='ultra'||rarity==='legendary'?',\n  "deal": "Mock offer e.g. 15% off at Waimea Canyon Tours",\n  "code": "GACHAGO'+Math.floor(Math.random()*90+10)+'"':''}
+}`;
+
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':S.apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:MODEL,max_tokens:800,messages:[{role:'user',content:prompt}]})
+    });
+    const data=await res.json();
+    if(data.error)throw new Error(data.error.message);
+    const txt=data.content[0].text.replace(/```json|```/g,'').trim();
+    const r=JSON.parse(txt);
+    S.currentResult={...r,rarity,location:loc};
+
+    document.getElementById('revealEmoji').textContent=r.emoji||getLocEmoji(loc.name);
+    document.getElementById('revealTitle').textContent=r.title||'Adventure Awaits';
+    document.getElementById('revealDesc').innerHTML=`<p>${r.description||''}</p>`;
+    document.getElementById('revealMeta').innerHTML=[
+      r.bestTime?`<span class="rmeta">🕐 ${r.bestTime}</span>`:'',
+      r.duration?`<span class="rmeta">⏱ ${r.duration}</span>`:'',
+      r.difficulty?`<span class="rmeta">💪 ${r.difficulty}</span>`:'',
+    ].join('');
+    if(r.deal){
+      document.getElementById('revealCoupon').style.display='block';
+      document.getElementById('couponVal').textContent=r.deal;
+      document.getElementById('couponCode').textContent=`Code: ${r.code||'GACHAGO'}`;
+    }
+  }catch(e){
+    document.getElementById('revealDesc').innerHTML=`<p style="color:#f87171">Error: ${e.message}</p><p style="color:var(--muted);font-size:0.75rem;margin-top:0.5rem">Check your API key in Settings.</p>`;
+    document.getElementById('revealTitle').textContent='Error loading adventure';
+  }
+}
+
+// ── PROOF / COSMETIC ───────────────────────────
+function handleProof(input){
+  if(!input.files||!input.files[0])return;
+  const zone=document.getElementById('proofZone');
+  zone.innerHTML=`<span style="font-size:1.25rem">✅</span><strong style="font-size:0.85rem;color:var(--green)">Visit Verified!</strong><p>Earning your cosmetic...</p>`;
+  zone.style.borderColor='var(--green)';
+  S.profile.stats.verified++;
+  saveProfile();
+  setTimeout(()=>{
+    const rarity=S.currentResult?.rarity||'common';
+    const pool=rarity==='legendary'?COSPOOL.filter(c=>c.rarity==='legendary'||c.rarity==='ultra'):
+               rarity==='ultra'?COSPOOL.filter(c=>c.rarity==='ultra'||c.rarity==='rare'):
+               rarity==='rare'?COSPOOL.filter(c=>c.rarity==='rare'||c.rarity==='common'):
+               COSPOOL.filter(c=>c.rarity==='common');
+    const cos=pool[Math.floor(Math.random()*pool.length)];
+    awardCosmetic(cos);
+  },1200);
+}
+
+function awardCosmetic(cos){
+  if(!S.profile.inventory.find(i=>i.id===cos.id))S.profile.inventory.push(cos);
+  saveProfile();
+  document.getElementById('cosIcon').textContent=cos.emoji;
+  document.getElementById('cosName').textContent=cos.name;
+  document.getElementById('cosType').textContent=`${cos.type} · ${cos.rarity.charAt(0).toUpperCase()+cos.rarity.slice(1)}`;
+  spawnParticles();
+  document.getElementById('cosOverlay').classList.add('open');
+}
+function closeCos(){
+  document.getElementById('cosOverlay').classList.remove('open');
+  toast('Cosmetic added to inventory! 🎒','ok');
+}
+
+function saveLog(){
+  if(!S.currentResult)return;
+  S.profile.log.unshift({
+    id:Date.now(),
+    title:S.currentResult.title,
+    location:S.currentResult.location?.name||'Unknown',
+    rarity:S.currentResult.rarity,
+    time:new Date().toLocaleDateString(),
+    verified:false
+  });
+  if(S.profile.log.length>50)S.profile.log.pop();
+  saveProfile();
+  toast('Saved to travel log! ✈️','ok');
+}
+
+function resetForNewPull(){
+  document.getElementById('revealOverlay').classList.remove('open');
+  if(S.currentLoc)openMachine(S.currentLoc.name,S.currentLoc.country,S.currentLoc.lat,S.currentLoc.lng);
+  else showView('map');
+}
+
+// ── PROFILE ────────────────────────────────────
+function renderProfile(){
+  const p=S.profile;
+  document.getElementById('avatarInner').textContent=p.avatar;
+  document.getElementById('sPulls').textContent=p.stats.pulls;
+  document.getElementById('sRare').textContent=p.stats.rare;
+  document.getElementById('sLeg').textContent=p.stats.legendary;
+  document.getElementById('sVerif').textContent=p.stats.verified;
+  const grid=document.getElementById('invGrid');
+  grid.innerHTML=p.inventory.length?p.inventory.map(it=>`
+    <div class="inv-item ${p.equip.includes(it.id)?'equipped':''}" onclick="toggleEquip('${it.id}')">
+      <span class="inv-em">${it.emoji}</span>
+      <div class="inv-nm">${it.name}</div>
+    </div>`).join(''):`<div class="empty-st" style="grid-column:1/-1"><span>🎰</span>Pull gachas to earn cosmetics!</div>`;
+  const log=document.getElementById('logList');
+  const cols={common:'var(--common)',rare:'var(--rare)',ultra:'var(--ultra)',legendary:'var(--legendary)'};
+  log.innerHTML=p.log.length?p.log.slice(0,20).map(e=>`
+    <div class="log-item">
+      <div class="log-dot" style="background:${cols[e.rarity]||'var(--muted)'}"></div>
+      <div class="log-info"><div class="log-nm">${e.title}</div><div class="log-loc">📍 ${e.location}</div></div>
+      <div class="log-right"><div>${e.time}</div>${e.verified?'<div class="log-ver">✅ Verified</div>':''}</div>
+    </div>`).join(''):`<div class="empty-st"><span>✈️</span>Your adventures will appear here</div>`;
+}
+function toggleEquip(id){
+  const idx=S.profile.equip.indexOf(id);
+  if(idx>-1)S.profile.equip.splice(idx,1); else S.profile.equip.push(id);
+  const av=S.profile.inventory.find(i=>S.profile.equip.includes(i.id)&&i.type==='Avatar');
+  if(av)S.profile.avatar=av.emoji;
+  saveProfile();renderProfile();
+}
+
+// ── PULLS ──────────────────────────────────────
+function getDailyLeft(){
+  const today=new Date().toDateString();
+  if(S.profile.daily.date!==today){S.profile.daily={date:today,count:0};saveProfile()}
+  return MAX_PULLS-S.profile.daily.count;
+}
+function updatePullDisplay(){
+  const left=getDailyLeft();
+  document.getElementById('navPulls').textContent=`🎰 ${left} pulls left`;
+  document.getElementById('pullsLeft').textContent=left+' remaining';
+  document.getElementById('pullsToday').textContent=S.profile.daily.count;
+  document.getElementById('pullsMax').textContent=MAX_PULLS;
+}
+function rollRarity(){
+  const r=Math.random();
+  if(r<0.02)return'legendary';
+  if(r<0.10)return'ultra';
+  if(r<0.40)return'rare';
+  return'common';
+}
+
+// ── EFFECTS ────────────────────────────────────
+function spawnConfetti(){
+  const layer=document.getElementById('confettiLayer');
+  const colors=['#ff6eb4','#c084fc','#60a5fa','#fbbf24','#2ecc87','#f87171'];
+  for(let i=0;i<80;i++){
+    const el=document.createElement('div');
+    el.className='cf';
+    const c=colors[i%colors.length];
+    const x=Math.random()*window.innerWidth;
+    const size=Math.random()*10+5;
+    const isCircle=Math.random()>0.5;
+    el.style.cssText=`left:${x}px;top:100vh;width:${size}px;height:${size}px;background:${c};border-radius:${isCircle?'50%':'2px'};--d:${1+Math.random()*1.5}s;--del:${Math.random()*0.6}s;--tx:${(Math.random()-0.5)*300}px;--ty:${-(Math.random()*window.innerHeight+300)}px;--r:${Math.random()*720}deg`;
+    layer.appendChild(el);
+    setTimeout(()=>el.remove(),3000);
+  }
+}
+function spawnParticles(){
+  const wrap=document.getElementById('particles');
+  wrap.innerHTML='';
+  const cols=['#ff6eb4','#c084fc','#fbbf24','#2ecc87'];
+  for(let i=0;i<40;i++){
+    const p=document.createElement('div');
+    p.className='pt';
+    const ang=(i/40)*Math.PI*2;
+    const dist=100+Math.random()*180;
+    const tx=Math.cos(ang)*dist,ty=Math.sin(ang)*dist;
+    p.style.cssText=`left:calc(50% - 4px);top:calc(50% - 4px);width:8px;height:8px;background:${cols[i%4]};--tx:${tx}px;--ty:${ty}px;--d:${0.5+Math.random()*0.8}s;--del:${Math.random()*0.3}s`;
+    wrap.appendChild(p);
+  }
+}
+
+// ── TOAST ──────────────────────────────────────
+function toast(msg,type=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className=`toast on ${type}`;
+  setTimeout(()=>t.className='toast',3000);
+}
+
+// ── HELPERS ────────────────────────────────────
+function getLocEmoji(n){
+  n=(n||'').toLowerCase();
+  if(/hawaii|honolulu|maui|kauai/.test(n))return'🌺';
+  if(/paris|france/.test(n))return'🗼';
+  if(/tokyo|japan|kyoto/.test(n))return'⛩';
+  if(/new york|nyc/.test(n))return'🗽';
+  if(/london/.test(n))return'🎡';
+  if(/rome|italy/.test(n))return'🏛';
+  if(/bali|indonesia/.test(n))return'🌴';
+  if(/iceland/.test(n))return'🌋';
+  if(/dubai/.test(n))return'🏙';
+  if(/beach|ocean|sea|coast/.test(n))return'🌊';
+  if(/mountain|peak|summit/.test(n))return'🏔';
+  return'📍';
+}
+function saveProfile(){localStorage.setItem('gg_profile',JSON.stringify(S.profile))}
+
+// ── INIT ───────────────────────────────────────
+buildBG();
+updatePullDisplay();
+if(S.apiKey)document.getElementById('keyBtn').textContent='🔑 Key Set';
+
+// machine ball spin keyframe
+const ks=document.createElement('style');
+ks.textContent='@keyframes spin3d{from{transform:translateX(-50%) rotateY(0)}to{transform:translateX(-50%) rotateY(360deg)}}';
+document.head.appendChild(ks);
+</script>
+</body>
+</html>
