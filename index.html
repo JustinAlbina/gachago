@@ -631,8 +631,9 @@ function buildBG() {
 function showView(name) {
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById('view-'+name).classList.add('active');
+  window.scrollTo(0,0);
   document.querySelectorAll('.nav-pill').forEach(b=>b.classList.remove('active-view'));
-  if(name==='map'){document.getElementById('navExplore').classList.add('active-view');if(!window._mapDone)initMap()}
+  if(name==='map'){document.getElementById('navExplore').classList.add('active-view');if(!window._mapDone)initMap();else setTimeout(()=>map.invalidateSize(),100);}
   if(name==='profile'){document.getElementById('navProfile').classList.add('active-view');renderProfile()}
 }
 function goHome(){showView('landing');document.querySelectorAll('.nav-pill').forEach(b=>b.classList.remove('active-view'))}
@@ -684,9 +685,7 @@ function initMap(){
     worldCopyJump:false,
   }).setView([20,10],2);
 
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_matter_all/{z}/{x}/{y}{r}.png',{
-    maxZoom:18,noWrap:true,
-  }).addTo(map);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,noWrap:true}).addTo(map);
 
   // Add custom pins for popular destinations
   PINS.forEach(p=>{
